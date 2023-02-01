@@ -1,0 +1,55 @@
+﻿@inject HttpClient Http
+@inject UserInfo userInfo 
+
+<div>
+    <EditForm Model="@Device" OnValidSubmit="@AddDeviceAsync">
+        <DataAnnotationsValidator />
+        <ValidationSummary />
+        <p>
+            <label>
+                Name:
+                <InputText @bind-Value="Device.Name" />
+            </label>
+        </p>
+        <p>
+            <label>
+                IP Adress:
+                <InputText @bind-Value="Device.IP" />
+            </label>
+        </p>
+        <p>
+            <label>
+                Note:
+                <InputText @bind-Value="Device.Note" />
+            </label>
+        </p>
+        <button class="btn btn-primary" type="submit">Add Device</button>
+    </EditForm>
+</div>
+
+@code {
+    [Parameter]
+    public Device Device { get; set; }
+
+    [Parameter]
+    public EventCallback<Device> DeviceChanged { get; set; }
+
+    private Task OnValueChanged(ChangeEventArgs e)
+    {
+        Device = e.Value as Device;
+        return DeviceChanged.InvokeAsync(Device);
+    }
+
+    private async Task AddDeviceAsync()
+    {
+        Device.ID = Guid.NewGuid().ToString();
+        WebPostWithDevice post = new() { UserInfo = userInfo, Device = Device };
+        await Http.PostAsJsonAsync<WebPostWithDevice>("Device", post);
+        Device = new();
+    }
+
+    protected override async Task OnInitializedAsync()
+    {
+
+    }
+}

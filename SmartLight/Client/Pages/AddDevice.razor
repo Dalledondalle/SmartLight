@@ -1,0 +1,25 @@
+﻿@page "/addDevice"
+@inject HttpClient Http
+@inject UserInfo userInfo
+@inject NavigationManager Nav
+
+<h1>Add a new Device here @userInfo.UserName</h1>
+
+<h4>in the ipadress field input the ipadress that is displayed on the screen of you smart light</h4>
+
+@if (Device is not null)
+{
+    <div>
+        <AddDeviceForm @bind-Device="Device" />
+    </div>
+}
+
+@code {
+    private Device Device { get; set; } = new();
+
+
+    protected override async Task OnInitializedAsync()
+    {
+
+    }
+}

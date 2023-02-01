@@ -1,0 +1,18 @@
+﻿@page "/ManageDevice"
+@inject HttpClient Http
+@inject NavigationManager Nav
+@inject UserInfo userInfo
+
+<div>
+    <EditDeviceForm @bind-Device="Device"></EditDeviceForm>
+</div>
+
+@code
+{
+    private Device Device { get; set; }
+
+    protected override async Task OnInitializedAsync()
+    {
+        if (!userInfo.IsValid) Nav.NavigateTo("/");
+    }
+}

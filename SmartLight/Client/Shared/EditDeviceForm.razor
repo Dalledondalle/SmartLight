@@ -1,0 +1,100 @@
+﻿@inject HttpClient Http
+@inject UserInfo userInfo
+
+@if (Devices is null)
+{
+    <p>Loading...</p>
+}
+else if (Devices.Count == 0)
+{
+    <p>No devices were found</p>
+}
+else
+{
+    <select class="form-control" @bind="@ID">
+
+        @foreach (var d in Devices)
+        {
+            <option value="@d.ID"> @d.Name </option>
+        }
+    </select>
+}
+
+@if (Device is not null)
+{
+    <div>
+        <EditForm Model="@Device" OnValidSubmit="@Update">
+            <DataAnnotationsValidator />
+            <ValidationSummary />
+            <p>
+                <label>
+                    Name:
+                    <InputText @bind-Value="Device.Name" />
+                </label>
+            </p>
+            <p>
+                <label>
+                    IP Adress:
+                    <InputText @bind-Value="Device.IP" />
+                </label>
+            </p>
+            <p>
+                <label>
+                    Note:
+                    <InputText @bind-Value="Device.Note" />
+                </label>
+            </p>
+            <button class="btn btn-primary" type="submit">Edit Device</button>
+        </EditForm>
+    </div>
+}
+
+@code {
+    [Parameter]
+    public Device Device { get; set; }
+
+    private string id = "";
+
+    private string ID
+    {
+        get
+        {
+            return Device is null ? id : Device.ID;
+        }
+
+        set
+        {
+            Device = Devices.FirstOrDefault(x => x.ID == value);
+        }
+    }
+
+    private List<Device> Devices { get; set; }
+
+    [Parameter]
+    public EventCallback<Device> DeviceChanged { get; set; }
+
+    private Task OnValueChanged(ChangeEventArgs e)
+    {
+        Device = e.Value as Device;
+        return DeviceChanged.InvokeAsync(Device);
+    }
+
+    protected async override Task OnInitializedAsync()
+    {
+        await Refresh();
+    }
+
+    private async Task Update()
+    {
+        WebPostWithDevice post = new() { UserInfo = userInfo, Device = Device };
+        await Http.PostAsJsonAsync<WebPostWithDevice>($"Device/Update", post);
+        Devices = null;
+        await Refresh();
+    }
+
+    private async Task Refresh()
+    {
+        Devices = await Http.GetFromJsonAsync<List<Device>>($"Device/GetByUserID?id={userInfo.ID}");
+        ID = Devices.Any() ? Devices.FirstOrDefault().ID : "";
+    }
+}

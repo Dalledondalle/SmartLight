@@ -1,0 +1,61 @@
+﻿@page "/"
+@inject HttpClient Http
+@inject Blazored.LocalStorage.ILocalStorageService ls
+@inject UserInfo userInfo
+
+
+@if (userInfo.IsValid)
+{
+    <h1>Welcom @userInfo.UserName</h1>
+}
+else
+{
+    <div>
+        <EditForm Model="newUser" OnValidSubmit="MakeUser">
+            <DataAnnotationsValidator />
+            <ValidationSummary />
+            <p>
+                <label>
+                    Username:
+                    <InputText @bind-Value="newUser.UserName" />
+                </label>
+            </p>
+            <button class="btn btn-primary" type="submit">CreateUser</button>
+        </EditForm>
+    </div>
+}
+
+
+@code{
+    const string fileName = "info";
+    UserInfo newUser { get; set; } = new();
+
+    public async void UpdateLocalStorage()
+    {
+        await ls.SetItemAsync(fileName, userInfo);
+    }
+
+    public async void ReadUser()
+    {
+        UserInfo t = await ls.GetItemAsync<UserInfo>(fileName);
+        if (t is not null)
+        {
+            userInfo.UserName = t.UserName;
+            userInfo.ID = t.ID;
+        }
+        StateHasChanged();
+    }
+
+    public async void MakeUser()
+    {
+        userInfo.ID = Guid.NewGuid().ToString();
+        userInfo.UserName = newUser.UserName;
+        await ls.SetItemAsync(fileName, userInfo);
+        await Http.PostAsJsonAsync<UserInfo>("User/AddUser", userInfo);
+    }
+
+    protected override async Task OnInitializedAsync()
+    {
+        ReadUser();
+    }
+}
